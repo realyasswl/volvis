@@ -33,6 +33,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     TransferFunction2DEditor tfEditor2D;
 
     int granularity = 1;
+    int imageSize = 0;
 
     public RaycastRenderer() {
         panel = new RaycastRendererPanel(this);
@@ -48,7 +49,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
         // set up image for storing the resulting rendering
         // the image width and height are equal to the length of the volume diagonal
-        int imageSize = (int) Math.floor(Math.sqrt(vol.getDimX() * vol.getDimX() + vol.getDimY() * vol.getDimY()
+        imageSize = (int) Math.floor(Math.sqrt(vol.getDimX() * vol.getDimX() + vol.getDimY() * vol.getDimY()
                 + vol.getDimZ() * vol.getDimZ()));
         if (imageSize % 2 != 0) {
             imageSize = imageSize + 1;
@@ -137,8 +138,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     void slicer(double[] viewMatrix) {
         // clear image
-        for (int j = 0; j < image.getHeight(); j++) {
-            for (int i = 0; i < image.getWidth(); i++) {
+        for (int j = 0; j < imageSize; j++) {
+            for (int i = 0; i < imageSize; i++) {
                 image.setRGB(i, j, 0);
             }
         }
@@ -152,7 +153,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
 
         // image is square
-        int imageCenter = image.getWidth() / 2;
+        int imageCenter = imageSize / 2;
 
         double[] pixelCoord = new double[3];
         double[] volumeCenter = new double[3];
@@ -162,8 +163,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         double max = volume.getMaximum();
         TFColor voxelColor = new TFColor();
 
-        for (int j = 0; j < image.getHeight(); j += granularity) {
-            for (int i = 0; i < image.getWidth(); i += granularity) {
+        for (int j = 0; j < imageSize; j += granularity) {
+            for (int i = 0; i < imageSize; i += granularity) {
 
                 pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
                         + volumeCenter[0];
@@ -188,7 +189,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     }
 
     void setRGB2Image(TFColor voxelColor, int i, int j, int granularity) {
-
+//        getLinearInterpolation
+        
+        
         // BufferedImage expects a pixel color packed as ARGB in an int
         int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
         int c_red = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
@@ -197,8 +200,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
         for (int m = 0; m < granularity; m++) {
             for (int n = 0; n < granularity; n++) {
-                if (n + i >= image.getWidth() || n + i < 0
-                        || m + j >= image.getHeight() || m + j < 0) {
+                if (n + i >= imageSize || n + i < 0
+                        || m + j >= imageSize || m + j < 0) {
                 } else {
                     image.setRGB(n + i, m + j, pixelColor);
                 }
@@ -210,8 +213,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     void MIP(double[] viewMatrix) {
         // clear image
-        for (int j = 0; j < image.getHeight(); j++) {
-            for (int i = 0; i < image.getWidth(); i++) {
+        for (int j = 0; j < imageSize; j++) {
+            for (int i = 0; i < imageSize; i++) {
                 image.setRGB(i, j, 0);
             }
         }
@@ -225,7 +228,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
 
         // image is square
-        int imageCenter = image.getWidth() / 2;
+        int imageCenter = imageSize / 2;
 
         double[] pixelCoord = new double[3];
         double[] volumeCenter = new double[3];
@@ -238,8 +241,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         int limit = (int) Math.sqrt(Math.pow(volume.getDimX() * viewVec[0], 2)
                 + Math.pow(volume.getDimY() * viewVec[1], 2)
                 + Math.pow(volume.getDimZ() * viewVec[2], 2));
-        for (int j = 0; j < image.getHeight(); j += granularity) {
-            for (int i = 0; i < image.getWidth(); i += granularity) {
+        for (int j = 0; j < imageSize; j += granularity) {
+            for (int i = 0; i < imageSize; i += granularity) {
 
                 int val = 0;
                 for (int loop = (int) (limit / 2); loop > -limit / 2; loop--) {
@@ -278,8 +281,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     void compositing(double[] viewMatrix) {
         // clear image
-        for (int j = 0; j < image.getHeight(); j++) {
-            for (int i = 0; i < image.getWidth(); i++) {
+        for (int j = 0; j < imageSize; j++) {
+            for (int i = 0; i < imageSize; i++) {
                 image.setRGB(i, j, 0);
             }
         }
@@ -293,7 +296,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
 
         // image is square
-        int imageCenter = image.getWidth() / 2;
+        int imageCenter = imageSize / 2;
 
         double[] pixelCoord = new double[3];
         double[] volumeCenter = new double[3];
@@ -306,8 +309,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         int limit = (int) Math.sqrt(Math.pow(volume.getDimX() * viewVec[0], 2)
                 + Math.pow(volume.getDimY() * viewVec[1], 2)
                 + Math.pow(volume.getDimZ() * viewVec[2], 2));
-        for (int j = 0; j < image.getHeight(); j += granularity) {
-            for (int i = 0; i < image.getWidth(); i += granularity) {
+        for (int j = 0; j < imageSize; j += granularity) {
+            for (int i = 0; i < imageSize; i += granularity) {
                 voxelColor = new TFColor(0, 0, 0, 1);
 //                for (int loop_i = limit / 2; loop_i > -limit / 2; loop_i--) {
                 for (int loop_i = -limit / 2; loop_i < limit / 2; loop_i++) {
@@ -472,7 +475,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         // draw rendered image as a billboard texture
         texture.enable(gl);
         texture.bind(gl);
-        double halfWidth = image.getWidth() / 2.0;
+        double halfWidth = imageSize / 2.0;
         gl.glPushMatrix();
         gl.glLoadIdentity();
         gl.glBegin(GL2.GL_QUADS);
@@ -502,8 +505,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     @Override
     public void changed() {
-        for (int i = 0; i < listeners.size(); i++) {
-            listeners.get(i).changed();
+        for (TFChangeListener listener : listeners) {
+            listener.changed();
         }
     }
 }
