@@ -42,6 +42,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     double kAmbient=0.1;
     double kDiff=0.7;
     double kSpec=0.2;
+    TFColor light=new TFColor(1,1,1,1);
     int a=10;    
     
     private boolean shading;
@@ -201,8 +202,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                         + volumeCenter[1];
                 pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
                         + volumeCenter[2];
-                int val = getVoxel(pixelCoord);
-//                int val = getTriVoxel(pixelCoord);
+//                int val = getVoxel(pixelCoord);
+                int val = getTriVoxel(pixelCoord);
 
                 // Map the intensity to a grey value by linear scaling
                 voxelColor.r = val / max;
@@ -369,8 +370,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                             + volumeCenter[1] + loop * viewVec[1];
                     pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
                             + volumeCenter[2] + loop * viewVec[2];
-                    val = Math.max(val, getVoxel(pixelCoord));
-//                    val = Math.max(val, getTriVoxel(pixelCoord));
+//                    val = Math.max(val, getVoxel(pixelCoord));
+                    val = Math.max(val, getTriVoxel(pixelCoord));
 
                 }
 
@@ -461,8 +462,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                      voxelColor.a += tempColor.a * transparentRate;
                      
                      * */
-//                    voxelColor = calColor(tFunc.getColor(getTriVoxel(pixelCoord)), voxelColor);
-                    voxelColor = calColor(tFunc.getColor(getVoxel(pixelCoord)), voxelColor);
+                    voxelColor = calColor(tFunc.getColor(getTriVoxel(pixelCoord)), voxelColor);
+//                    voxelColor = calColor(tFunc.getColor(getVoxel(pixelCoord)), voxelColor);
                 }
                 voxelColor.a = 1 - voxelColor.a;
 
@@ -517,6 +518,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         for (int j = 0; j < imageSize; j += granularity) {
             for (int i = 0; i < imageSize; i += granularity) {
                 voxelColor = new TFColor(0, 0, 0, 1);
+                float tempMag=0;
+                double[] surfaceCoord = new double[3];
 //                for (int loop_i = limit / 2; loop_i > -limit / 2; loop_i--) {
                 for (int loop_i = -limit / 2; loop_i < limit / 2; loop_i++) {
                     pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
@@ -527,14 +530,41 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                             + volumeCenter[2] + loop_i * viewVec[2];
 
                     VoxelGradient gra = getGradient(pixelCoord);
-//                    voxelColor = cal2dColor(getTriVoxel(pixelCoord), voxelColor, fv, r, widgetColor, (short) gra.mag);
+                    
+//                    voxelColor = cal2dColor(voxelColor, widgetColor, getTriVoxel(pixelCoord), fv, r, (short) gra.mag);
                     voxelColor = cal2dColor(voxelColor, widgetColor, getVoxel(pixelCoord), fv, r, (short) gra.mag);
+                    if(shading){
+                        //shading, find the point with the max gradient with dotproducts being positive
+                        double dotProducts = viewVec[0] * gra.x + viewVec[1] * gra.y + viewVec[2] * gra.z;
+                        if (dotProducts > 0 && gra.mag > tempMag) {
+                            tempMag = gra.mag;
+                            surfaceCoord[0] = pixelCoord[0];
+                            surfaceCoord[1] = pixelCoord[1];
+                            surfaceCoord[2] = pixelCoord[2];
+                        }
+                    }
+                    
                 }
                 voxelColor.a = 1 - voxelColor.a;
                 
                 /* kambient = 0.1, kdiff = 0.7, kspec = 0.2, and α = 10*/
-                if(shading){
-                    //TODO
+                if(shading) {
+                    short vox = getVoxel(surfaceCoord);
+                    VoxelGradient gradient=this.getGradient(surfaceCoord);
+//                    TFColor color = tFunc.getColor(vox);
+                    double LN = viewVec[0] * gradient.x / tempMag
+                            + viewVec[1] * gradient.y / tempMag
+                            + viewVec[2] * gradient.z/ tempMag;
+                    voxelColor.r = kAmbient * light.r
+                            + widgetColor.r * kDiff * LN
+                            + kSpec * Math.pow(LN, a);
+                    voxelColor.g = kAmbient * light.g
+                            + widgetColor.g * kDiff * LN
+                            + kSpec * Math.pow(LN, a);
+                    voxelColor.b = kAmbient * light.b
+                            + widgetColor.b * kDiff * LN
+                            + kSpec * Math.pow(LN, a);
+//                    logger.debug("i,j:"+i+","+j+","+voxelColor+",viewVec:"+viewVec[0]+","+viewVec[1]+","+viewVec[2]+",surfaceCoord:"+surfaceCoord[0]+","+surfaceCoord[1]+","+surfaceCoord[2]+",LN:"+LN);
                 }
 
                 // Map the intensity to a grey value by linear scaling
