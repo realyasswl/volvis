@@ -484,6 +484,11 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         double r = triWidget.radius;
         short fv = triWidget.baseIntensity;
         TFColor widgetColor = triWidget.color;
+        
+        double graMax=triWidget.graMax;
+        double graMin=triWidget.graMin;
+//        System.out.println(graMax+","+graMin);
+        
 //        System.out.println("r="+r+",fv="+fv+",av="+av);
 //        short av=triWidget.
         // clear image
@@ -530,7 +535,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                             + volumeCenter[2] + loop_i * viewVec[2];
 
                     VoxelGradient gra = getGradient(pixelCoord);
-                    
+                    if(gra.mag>graMax||gra.mag<graMin){
+                        continue;
+                    }
 //                    voxelColor = cal2dColor(voxelColor, widgetColor, getTriVoxel(pixelCoord), fv, r, (short) gra.mag);
                     voxelColor = cal2dColor(voxelColor, widgetColor, getVoxel(pixelCoord), fv, r, (short) gra.mag);
                     if(shading){
