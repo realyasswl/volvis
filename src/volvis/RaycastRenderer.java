@@ -35,22 +35,24 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     TransferFunctionEditor tfEditor;
     TransferFunction2DEditor tfEditor2D;
 
-    final static int INTERACTIVE_MODE_STEP=4;
-    final static int INTERACTIVE_MODE_GRANULARITY=2;
-    final static int NON_INTERACTIVE_MODE_STEP=1;
-    final static int NON_INTERACTIVE_MODE_GRANULARITY=1;
-    
+    final static int INTERACTIVE_MODE_STEP = 4;
+    final static int INTERACTIVE_MODE_GRANULARITY = 2;
+    final static int NON_INTERACTIVE_MODE_STEP = 1;
+    final static int NON_INTERACTIVE_MODE_GRANULARITY = 1;
+
     int granularity = NON_INTERACTIVE_MODE_GRANULARITY;
-    int step=NON_INTERACTIVE_MODE_STEP;
+    int step = NON_INTERACTIVE_MODE_STEP;
     int imageSize = 0;
-    
-    /**shading parameters*/
-    double kAmbient=0.1;
-    double kDiff=0.7;
-    double kSpec=0.2;
-    TFColor light=new TFColor(1,1,1,1);
-    int a=10;    
-    
+
+    /**
+     * shading parameters
+     */
+    double kAmbient = 0.1;
+    double kDiff = 0.5;
+    double kSpec = 0.4;
+    TFColor light = new TFColor(1, 1, 1, 1);
+    double alp = 10;
+
     private boolean shading;
 
     public void setShading(boolean s) {
@@ -330,7 +332,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         for (int j = 0; j < imageSize; j += granularity) {
             for (int i = 0; i < imageSize; i += granularity) {
                 int val = 0;
-                for (int loop = (int) (limit / 2); loop > -limit / 2; loop=loop-step) {
+                for (int loop = (int) (limit / 2); loop > -limit / 2; loop = loop - step) {
                     pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
                             + volumeCenter[0] + loop * viewVec[0];
                     pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
@@ -398,7 +400,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             for (int i = 0; i < imageSize; i += granularity) {
                 voxelColor = new TFColor(0, 0, 0, 1);
 //                for (int loop_i = limit / 2; loop_i > -limit / 2; loop_i--) {
-                for (int loop_i = -limit / 2; loop_i < limit / 2; loop_i+=step) {
+                for (int loop_i = -limit / 2; loop_i < limit / 2; loop_i += step) {
                     pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
                             + volumeCenter[0] + loop_i * viewVec[0];
                     pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
@@ -445,11 +447,11 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         double r = triWidget.radius;
         short fv = triWidget.baseIntensity;
         TFColor widgetColor = triWidget.color;
-        
-        double graMax=triWidget.graMax;
-        double graMin=triWidget.graMin;
+
+        double graMax = triWidget.graMax;
+        double graMin = triWidget.graMin;
 //        System.out.println(graMax+","+graMin);
-        
+
 //        System.out.println("r="+r+",fv="+fv+",av="+av);
 //        short av=triWidget.
         // clear image
@@ -484,10 +486,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         for (int j = 0; j < imageSize; j += granularity) {
             for (int i = 0; i < imageSize; i += granularity) {
                 voxelColor = new TFColor(0, 0, 0, 1);
-                float tempMag=0;
+                float tempMag = 0;
                 double[] surfaceCoord = new double[3];
 //                for (int loop_i = limit / 2; loop_i > -limit / 2; loop_i--) {
-                for (int loop_i = -limit / 2; loop_i < limit / 2; loop_i+=step) {
+                for (int loop_i = -limit / 2; loop_i < limit / 2; loop_i += step) {
                     pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
                             + volumeCenter[0] + loop_i * viewVec[0];
                     pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
@@ -517,20 +519,20 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 voxelColor.a = 1 - voxelColor.a;
 
                 /* kambient = 0.1, kdiff = 0.7, kspec = 0.2, and α = 10*/
-                if(shading) {
-                    VoxelGradient gradient=this.getTriGradient(surfaceCoord);
+                if (shading) {
+                    VoxelGradient gradient = this.getTriGradient(surfaceCoord);
                     double LN = viewVec[0] * gradient.x / tempMag
                             + viewVec[1] * gradient.y / tempMag
-                            + viewVec[2] * gradient.z/ tempMag;
+                            + viewVec[2] * gradient.z / tempMag;
                     voxelColor.r = kAmbient * light.r
                             + widgetColor.r * kDiff * LN
-                            + kSpec * Math.pow(LN, a);
+                            + kSpec * Math.pow(LN, alp);
                     voxelColor.g = kAmbient * light.g
                             + widgetColor.g * kDiff * LN
-                            + kSpec * Math.pow(LN, a);
+                            + kSpec * Math.pow(LN, alp);
                     voxelColor.b = kAmbient * light.b
                             + widgetColor.b * kDiff * LN
-                            + kSpec * Math.pow(LN, a);
+                            + kSpec * Math.pow(LN, alp);
                 }
 
                 setRGB2Image(voxelColor, i, j, granularity);
@@ -538,11 +540,11 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         }
     }
 
-    TFColor cal2dColor(TFColor old, TFColor selected, short fxi, short fv, double r, VoxelGradient gradient,double[] viewVec) {
+    TFColor cal2dColor(TFColor old, TFColor selected, short fxi, short fv, double r, VoxelGradient gradient, double[] viewVec) {
         short dfxi = (short) gradient.mag;
         TFColor result = new TFColor();
         TFColor val = tFunc.getColor(fxi);
-        
+
         if (dfxi == 0 && fxi == fv) {
             val.a = selected.a;
         } else if (dfxi > 0 && fv >= (fxi - r * dfxi) && fv <= (fxi + r * dfxi)) {
@@ -556,10 +558,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         result.b = old.b * (1 - val.a) + val.a * selected.b;
 
         /*
-        result.r = selected.r * (1 - val.a) + val.a * val.r;
-        result.g = selected.g * (1 - val.a) + val.a * val.g;
-        result.b = selected.b * (1 - val.a) + val.a * val.b;
-        */
+         result.r = selected.r * (1 - val.a) + val.a * val.r;
+         result.g = selected.g * (1 - val.a) + val.a * val.g;
+         result.b = selected.b * (1 - val.a) + val.a * val.b;
+         */
         return result;
     }
 
@@ -568,15 +570,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         double r = triWidget.radius;
         short fv = triWidget.baseIntensity;
         TFColor widgetColor = triWidget.color;
-        
-        double graMax=triWidget.graMax;
-        double graMin=triWidget.graMin;
-        // clear image
-        for (int j = 0; j < imageSize; j++) {
-            for (int i = 0; i < imageSize; i++) {
-                image.setRGB(i, j, 0);
-            }
-        }
+
+        System.out.println(widgetColor);
+        double graMax = triWidget.graMax;
+        double graMin = triWidget.graMin;
 
         // perpendicular to the view vector viewVec
         double[] viewVec = new double[3];
@@ -585,7 +582,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         VectorMath.setVector(uVec, viewMatrix[0], viewMatrix[4], viewMatrix[8]);
         VectorMath.setVector(vVec, viewMatrix[1], viewMatrix[5], viewMatrix[9]);
         VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
-
         // image is square
         int imageCenter = imageSize / 2;
 
@@ -593,16 +589,14 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         double[] volumeCenter = new double[3];
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
 
-        // sample on a plane through the origin of the volume data
-        TFColor voxelColor;
-
         int limit = (int) Math.sqrt(Math.pow(volume.getDimX() * viewVec[0], 2)
                 + Math.pow(volume.getDimY() * viewVec[1], 2)
                 + Math.pow(volume.getDimZ() * viewVec[2], 2));
         for (int j = 0; j < imageSize; j += granularity) {
             for (int i = 0; i < imageSize; i += granularity) {
-                voxelColor = new TFColor(0, 0, 0, 1);
-                for (int loop_i = -limit / 2; loop_i < limit / 2; loop_i+=step) {
+                image.setRGB(i, j, 0);
+                 TFColor voxelColor = new TFColor(0, 0, 0, 1);
+                for (int loop_i = -limit / 2; loop_i < limit / 2; loop_i += step) {
                     pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
                             + volumeCenter[0] + loop_i * viewVec[0];
                     pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
@@ -621,46 +615,140 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             }
         }
     }
-
-    TFColor cal2dColor2(TFColor old, TFColor selected, short fxi, short fv, double r, VoxelGradient gradient,double[] viewVec) {
-        short dfxi = (short) gradient.mag;
+    TFColor cal2dColor2(TFColor old, TFColor selected, short fxi, short fv, double r, VoxelGradient gradient, double[] viewVec) {
+        double dfxi = gradient.mag;
         TFColor result = new TFColor();
-        TFColor val = tFunc.getColor(fxi);
-        
+        double currentAlpha;
         if (dfxi == 0 && fxi == fv) {
-            val.a = selected.a;
+            currentAlpha = selected.a;
         } else if (dfxi > 0 && fv >= (fxi - r * dfxi) && fv <= (fxi + r * dfxi)) {
-            val.a = selected.a * (1 - (fv - fxi) / (r * dfxi));
+            currentAlpha = selected.a * (1 - (fv - fxi) / (r * dfxi));
         } else {
-            val.a = 0;
+            currentAlpha= 0;
         }
-        result.a = old.a * (1 - val.a);
-        
+        result.a = old.a * (1 - currentAlpha);
+
         if (shading) {
-            double dotProducts = viewVec[0] * gradient.x + viewVec[1] * gradient.y + viewVec[2] * gradient.z;
-            if (dotProducts > 0) {
+            double dotProducts =(viewVec[0] * gradient.x + viewVec[1] * gradient.y + viewVec[2] * gradient.z);
+            if (dotProducts >0) {
                 double LN = dotProducts / gradient.mag;
-                double tr = kAmbient * light.r + selected.r * kDiff * LN + kSpec * Math.pow(LN, a);
-                double tg = kAmbient * light.g + selected.g * kDiff * LN + kSpec * Math.pow(LN, a);
-                double tb = kAmbient * light.b + selected.b * kDiff * LN + kSpec * Math.pow(LN, a);
-                result.r = old.r * (1 - val.a) + val.a * tr;
-                result.g = old.g * (1 - val.a) + val.a * tg;
-                result.b = old.b * (1 - val.a) + val.a * tb;
+                double pow = Math.pow(LN, alp);
+                double tr = kAmbient * light.r + selected.r * kDiff * LN + kSpec * pow;
+                double tg = kAmbient * light.g + selected.g * kDiff * LN + kSpec * pow;
+                double tb = kAmbient * light.b + selected.b * kDiff * LN + kSpec * pow;
+                result.r = old.r * (1 - currentAlpha) + currentAlpha * tr;
+                result.g = old.g * (1 - currentAlpha) + currentAlpha * tg;
+                result.b = old.b * (1 - currentAlpha) + currentAlpha * tb;
             }
         } else {
-            result.r = old.r * (1 - val.a) + val.a * selected.r;
-            result.g = old.g * (1 - val.a) + val.a * selected.g;
-            result.b = old.b * (1 - val.a) + val.a * selected.b;
+            result.r = old.r * (1 - currentAlpha) + currentAlpha * selected.r;
+            result.g = old.g * (1 - currentAlpha) + currentAlpha * selected.g;
+            result.b = old.b * (1 - currentAlpha) + currentAlpha * selected.b;
         }
-        
         /*
-        result.r = selected.r * (1 - val.a) + val.a * val.r;
-        result.g = selected.g * (1 - val.a) + val.a * val.g;
-        result.b = selected.b * (1 - val.a) + val.a * val.b;
-        */
+         result.r = selected.r * (1 - val.a) + val.a * val.r;
+         result.g = selected.g * (1 - val.a) + val.a * val.g;
+         result.b = selected.b * (1 - val.a) + val.a * val.b;
+         */
         return result;
     }
-    
+
+    void twoDTransferDisplay(double[] viewMatrix) {
+
+        // perpendicular to the view vector viewVec
+        double[] viewVec = new double[3];
+        double[] uVec = new double[3];
+        double[] vVec = new double[3];
+        VectorMath.setVector(uVec, viewMatrix[0], viewMatrix[4], viewMatrix[8]);
+        VectorMath.setVector(vVec, viewMatrix[1], viewMatrix[5], viewMatrix[9]);
+        VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
+        // image is square
+        int imageCenter = image.getWidth() / 2;
+        int halfsize = (int) Math.floor(Math.sqrt(
+                volume.getDimX() * volume.getDimX()
+                + volume.getDimY() * volume.getDimY()
+                + volume.getDimZ() * volume.getDimZ())) / 2;
+        double s_alpha = 0;
+        double s_red = 0;
+        double s_green = 0;
+        double s_blue = 0;
+        int k = 0;
+        double is = 0;
+        double js = 0;
+        double ks = 0;
+
+        double alpha = 0;
+        double deltaf = 0;
+        double[] pixelCoord = new double[3];
+        double[] volumeCenter = new double[3];
+        VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
+        
+                    Short fv = tfEditor2D.triangleWidget.baseIntensity;
+                    double r = tfEditor2D.triangleWidget.radius;
+TFColor selected=tfEditor2D.triangleWidget.color;
+        for (int j = 0; j < imageSize; j += granularity) {
+            for (int i = 0; i < imageSize; i += granularity) {
+                image.setRGB(i, j, 0);
+                s_alpha = 0;
+                s_red = 0;
+                s_green = 0;
+                s_blue = 0;
+
+                for (k = halfsize; k > -halfsize; k -= step) {
+                    is = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
+                            + volumeCenter[0] + viewVec[0] * k;
+                    pixelCoord[0] = is;
+                    js = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
+                            + volumeCenter[1] + viewVec[1] * k;
+                    pixelCoord[1] = js;
+                    ks = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
+                            + volumeCenter[2] + viewVec[2] * k;
+                    pixelCoord[2] = ks;
+                    if (is >= volume.getDimX() - 1 || is < 0 || js >= volume.getDimY() - 1 || js < 0 || ks >= volume.getDimZ() || ks < 0) {
+                        continue;
+                    }
+
+                    short val_s = (short) getTriVoxel(pixelCoord);
+
+                    VoxelGradient grad = gradients.getGradient((int) Math.floor(is), (int) Math.floor(js), (int) Math.floor(ks));
+
+                    deltaf = gradients.getGradient((int) Math.floor(is), (int) Math.floor(js), (int) Math.floor(ks)).mag;
+
+                    if (deltaf == 0 && val_s == fv) {
+                        alpha = selected.a;
+                    } else if (deltaf > 0 && val_s - r * deltaf <= fv && val_s + r * deltaf >= fv && deltaf >= tfEditor2D.triangleWidget.graMin && deltaf <= tfEditor2D.triangleWidget.graMax) {
+                        alpha = selected.a * (1 - (1 / r) * ((fv - val_s) / deltaf));
+                    } else {
+                        alpha = 0;
+                    }
+                    double p_red = selected.r;
+                    double p_green = selected.g;
+                    double p_blue = selected.b;
+                    if (shading) {
+                        double[] grad_unit = new double[]{grad.x / grad.mag, grad.y / grad.mag, grad.z / grad.mag};
+                        double viewVecLen = VectorMath.length(viewVec);
+                        double[] viewVec_unit = new double[]{viewVec[0] / viewVecLen, viewVec[1] / viewVecLen, viewVec[2] / viewVecLen};;
+                        double power_k_diff = -VectorMath.dotproduct(grad_unit, viewVec_unit);
+
+                        if (power_k_diff > 0 //                            .000001 && grad.mag > 0
+                                ) {
+                            double power_k_spec = Math.pow(power_k_diff, alp);
+
+                            p_red = (kAmbient * 0.1d + selected.r * kDiff * power_k_diff + kSpec * power_k_spec);
+                            p_green = (kAmbient * 0.1d + selected.g * kDiff * power_k_diff + kSpec * power_k_spec);
+                            p_blue = (kAmbient * 0.1d + selected.b * kDiff * power_k_diff + kSpec * power_k_spec);
+                        }
+                    }
+
+                    s_alpha = s_alpha + (1 - s_alpha) * alpha;
+                    s_red = s_red * s_alpha + p_red * (1 - s_alpha);
+                    s_green = s_green * s_alpha + p_green * (1 - s_alpha);
+                    s_blue = s_blue * s_alpha + p_blue * (1 - s_alpha);
+                }
+                setRGB2Image(new TFColor(s_red, s_green, s_blue, s_alpha), i, j, granularity);
+            }
+        }
+    }
     private void drawBoundingBox(GL2 gl) {
         gl.glPushAttrib(GL2.GL_CURRENT_BIT);
         gl.glDisable(GL2.GL_LIGHTING);
@@ -757,6 +845,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 break;
             case FUNCTION_2DFUNC:
                 twoDimFunction2(viewMatrix);
+//                twoDTransferDisplay(viewMatrix);
                 break;
             case 5:
                 break;
