@@ -95,7 +95,7 @@ public class TransferFunction2DView extends javax.swing.JPanel {
             y_b / 2 + y_t / 2 - DOTSIZE / 2};
         controlArea = new Rectangle2D.Double(areaCenter[0], areaCenter[1],
                 DOTSIZE, DOTSIZE);
-        g2.setColor(Color.BLACK);
+//        g2.setColor(Color.BLACK);
         g2.fill(controlArea);
     }
     
