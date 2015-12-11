@@ -350,7 +350,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
                             + volumeCenter[2] + loop * viewVec[2];
 //                    val = Math.max(val, getVoxel(pixelCoord));
-                    val = Math.max(val, getTriVoxel(pixelCoord));
+                    short temp=getTriVoxel(pixelCoord);
+                    val = Math.max(val, temp);
 
                 }
 
@@ -526,7 +527,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     }
 
                 }
-                voxelColor.a = 1 - voxelColor.a;
+//                voxelColor.a = 1 - voxelColor.a;
 
                 /* kambient = 0.1, kdiff = 0.7, kspec = 0.2, and α = 10*/
                 if (shading) {
@@ -562,7 +563,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         } else {
             val.a = 0;
         }
-        result.a = old.a * (1 - val.a);
+        result.a = old.a * (1 - val.a)+ val.a;
         result.r = old.r * (1 - val.a) + val.a * selected.r;
         result.g = old.g * (1 - val.a) + val.a * selected.g;
         result.b = old.b * (1 - val.a) + val.a * selected.b;
@@ -827,6 +828,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         gl.glEnable(GL2.GL_LIGHTING);
         gl.glPopAttrib();
     }
+    public static final int FUNCTION_MAXGRADIENT = 5;
     public static final int FUNCTION_2DFUNC = 4;
     public static final int FUNCTION_COMPOSITING = 3;
     public static final int FUNCTION_MIP = 2;
@@ -868,7 +870,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 twoDimFunction2(viewMatrix);
 //                twoDTransferDisplay(viewMatrix);
                 break;
-            case 5:
+            case FUNCTION_MAXGRADIENT:
+                twoDimFunction(viewMatrix);
                 break;
             default:
                 slicer(viewMatrix);

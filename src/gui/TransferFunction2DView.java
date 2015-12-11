@@ -14,6 +14,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.GeneralPath;
 import java.awt.geom.Rectangle2D;
 
 /**
@@ -26,7 +27,9 @@ public class TransferFunction2DView extends javax.swing.JPanel {
     private final int DOTSIZE = 8;
     public Ellipse2D.Double radiusAndMinGradientPoint;
     public Rectangle2D.Double controlArea;
-    public Rectangle2D.Double coverArea;
+    private double leftControlArea,rightControlArea, bottomControlArea,topControlArea;
+//    public Rectangle2D.Double coverArea;
+    public java.awt.geom.GeneralPath coverArea;
     boolean selectedRadiusAndMinGradientPoint, selectedControlArea;
     private double maxGradientMagnitude;
     public TransferFunction2DView(TransferFunction2DEditor ed) {
@@ -71,8 +74,10 @@ public class TransferFunction2DView extends javax.swing.JPanel {
         int yGraMax = h-(int) (ed.triangleWidget.graMax * h / ed.getMaxGradientMagnitude());
         int yGraMin = h-(int) (ed.triangleWidget.graMin * h / ed.getMaxGradientMagnitude());
         
-        int x_l=xpos - (int) (ed.triangleWidget.radius * binWidth * maxGradientMagnitude);
-        int x_r=xpos + (int) (ed.triangleWidget.radius * binWidth * maxGradientMagnitude);
+//        int x_l=xpos - (int) (ed.triangleWidget.radius * binWidth * maxGradientMagnitude);
+//        int x_r=xpos + (int) (ed.triangleWidget.radius * binWidth * maxGradientMagnitude);
+        int x_l=xpos - (int) (ed.triangleWidget.radius * binWidth * ed.getMaxGradientMagnitude());
+        int x_r=xpos + (int) (ed.triangleWidget.radius * binWidth * ed.getMaxGradientMagnitude());
         int y_t=yGraMax;
         int y_b=yGraMin;
         
@@ -89,13 +94,22 @@ public class TransferFunction2DView extends javax.swing.JPanel {
         g2.drawLine(x_r, yGraMax,x_r, yGraMin);
         g2.drawLine(x_l, yGraMax,x_r, yGraMax);
         g2.drawLine(x_l, yGraMin,x_r, yGraMin);
-        coverArea=new Rectangle2D.Double(x_l,y_t,x_r-x_l,y_b-y_t);
+//        coverArea=new Rectangle2D.Double(x_l,y_t,x_r-x_l,y_b-y_t);
+        leftControlArea=xpos-(xpos-x_l)*(h-y_t)/h;
+        bottomControlArea=y_b;
+        topControlArea=y_t;
+        rightControlArea=xpos+(xpos-x_l)*(h-y_t)/h;
+        coverArea=new GeneralPath();
+      coverArea.moveTo(leftControlArea, topControlArea);
+      coverArea.lineTo(xpos-(xpos-x_l)*(h-y_b)/h, bottomControlArea);
+      coverArea.lineTo(xpos+(xpos-x_l)*(h-y_b)/h, bottomControlArea);
+      coverArea.lineTo(rightControlArea, topControlArea);
+      coverArea.closePath();
         g2.fill(coverArea);
         double[] areaCenter = {xpos - DOTSIZE / 2,
             y_b / 2 + y_t / 2 - DOTSIZE / 2};
         controlArea = new Rectangle2D.Double(areaCenter[0], areaCenter[1],
                 DOTSIZE, DOTSIZE);
-//        g2.setColor(Color.BLACK);
         g2.fill(controlArea);
     }
     
@@ -115,11 +129,11 @@ public class TransferFunction2DView extends javax.swing.JPanel {
                 Point dragEnd = e.getPoint();
                 if (selectedRadiusAndMinGradientPoint) {
                     // restrain to horizontal movement
-                    if(dragEnd.x<= coverArea.x) {
-                        dragEnd.x = (int) (coverArea.x + 1);
+                    if(dragEnd.x<= leftControlArea) {
+                        dragEnd.x = (int) (leftControlArea + 1);
                     }
-                    if (dragEnd.y <= coverArea.y) {
-                        dragEnd.y = (int) (coverArea.y + 1);
+                    if (dragEnd.y <= topControlArea) {
+                        dragEnd.y = (int) (topControlArea + 1);
                     }
                 }
 //                else if (selectedControlArea) {
@@ -141,12 +155,15 @@ public class TransferFunction2DView extends javax.swing.JPanel {
                 double h = getHeight();
                 double binWidth = (double) w / (double) ed.xbins;
                 if (selectedRadiusAndMinGradientPoint) {
-                    ed.triangleWidget.radius = (dragEnd.x - (ed.triangleWidget.baseIntensity * binWidth)) / (binWidth * maxGradientMagnitude);
+//                    ed.triangleWidget.radius = (dragEnd.x - (ed.triangleWidget.baseIntensity * binWidth)) / (binWidth * maxGradientMagnitude);
+                    ed.triangleWidget.radius = (dragEnd.x - (ed.triangleWidget.baseIntensity * binWidth)) / (binWidth * ed.getMaxGradientMagnitude());
                     ed.triangleWidget.graMin = (ed.getMaxGradientMagnitude() - dragEnd.y * ed.getMaxGradientMagnitude() / h);
                 } else if (selectedControlArea) {
                     ed.triangleWidget.baseIntensity = (short) (dragEnd.x / binWidth);
-                    ed.triangleWidget.graMin = (ed.getMaxGradientMagnitude() - (dragEnd.y + coverArea.height / 2) * ed.getMaxGradientMagnitude() / h);
-                    ed.triangleWidget.graMax = (ed.getMaxGradientMagnitude() - (dragEnd.y - coverArea.height / 2) * ed.getMaxGradientMagnitude() / h);
+//                    ed.triangleWidget.graMin = (ed.getMaxGradientMagnitude() - (dragEnd.y + coverArea.height / 2) * ed.getMaxGradientMagnitude() / h);
+//                    ed.triangleWidget.graMax = (ed.getMaxGradientMagnitude() - (dragEnd.y - coverArea.height / 2) * ed.getMaxGradientMagnitude() / h);
+                    ed.triangleWidget.graMin = (ed.getMaxGradientMagnitude() - (dragEnd.y + (bottomControlArea-topControlArea) / 2) * ed.getMaxGradientMagnitude() / h);
+                    ed.triangleWidget.graMax = (ed.getMaxGradientMagnitude() - (dragEnd.y - (bottomControlArea-topControlArea) / 2) * ed.getMaxGradientMagnitude() / h);
                 }
                 ed.setSelectedInfo();
                 repaint();
