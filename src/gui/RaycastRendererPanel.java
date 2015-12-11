@@ -47,6 +47,12 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
         compositingButton = new javax.swing.JRadioButton();
         tf2dButton = new javax.swing.JRadioButton();
         shadingCheckbox = new javax.swing.JCheckBox();
+        ambientSlider = new javax.swing.JSlider();
+        diffSlider = new javax.swing.JSlider();
+        specSlider = new javax.swing.JSlider();
+        ambientLabel = new javax.swing.JLabel();
+        diffLabel = new javax.swing.JLabel();
+        specLabel = new javax.swing.JLabel();
 
         jLabel1.setText("Rendering time (ms):");
 
@@ -92,48 +98,97 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
             }
         });
 
+        ambientSlider.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                ambientSliderStateChanged(evt);
+            }
+        });
+
+        diffSlider.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                diffSliderStateChanged(evt);
+            }
+        });
+
+        specSlider.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                specSliderStateChanged(evt);
+            }
+        });
+
+        ambientLabel.setText("kAmbient");
+
+        diffLabel.setText("kDiff");
+
+        specLabel.setText("kSpec");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addGroup(layout.createSequentialGroup()
+                            .addComponent(jLabel1)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(renderingSpeedLabel))
+                        .addGroup(layout.createSequentialGroup()
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(compositingButton)
+                                .addComponent(tf2dButton)
+                                .addComponent(mipButton)
+                                .addComponent(slicerButton)
+                                .addComponent(shadingCheckbox))
+                            .addGap(31, 31, 31)))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(ambientLabel)
+                            .addComponent(diffLabel)
+                            .addComponent(specLabel))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(renderingSpeedLabel))
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(compositingButton)
-                        .addComponent(tf2dButton)
-                        .addComponent(mipButton)
-                        .addComponent(slicerButton)
-                        .addComponent(shadingCheckbox)))
-                .addContainerGap(339, Short.MAX_VALUE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(diffSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(ambientSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(specSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap(265, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(renderingSpeedLabel))
-                .addGap(49, 49, 49)
-                .addComponent(slicerButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(mipButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(compositingButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(tf2dButton)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel1)
+                            .addComponent(renderingSpeedLabel))
+                        .addGap(49, 49, 49)
+                        .addComponent(slicerButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(mipButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(compositingButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(tf2dButton)
+                        .addGap(18, 18, 18)
+                        .addComponent(shadingCheckbox)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(ambientSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(ambientLabel))
                 .addGap(18, 18, 18)
-                .addComponent(shadingCheckbox)
-                .addContainerGap(137, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(diffSlider, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(diffLabel, javax.swing.GroupLayout.Alignment.TRAILING))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(specSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(specLabel))
+                .addContainerGap(45, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
     private void mipButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mipButtonActionPerformed
-//        JOptionPane.showMessageDialog(this, "Not implemented.");
         renderer.setFunction(RaycastRenderer.FUNCTION_MIP);
     }//GEN-LAST:event_mipButtonActionPerformed
 
@@ -142,29 +197,54 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_slicerButtonActionPerformed
 
     private void compositingButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_compositingButtonActionPerformed
-//        JOptionPane.showMessageDialog(this, "Not implemented.");
         renderer.setFunction(RaycastRenderer.FUNCTION_COMPOSITING);
     }//GEN-LAST:event_compositingButtonActionPerformed
 
     private void tf2dButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tf2dButtonActionPerformed
-//        JOptionPane.showMessageDialog(this, "Not implemented.");
         renderer.setFunction(RaycastRenderer.FUNCTION_2DFUNC);
     }//GEN-LAST:event_tf2dButtonActionPerformed
 
     private void shadingCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shadingCheckboxActionPerformed
-//        JOptionPane.showMessageDialog(this, "Not implemented.");
-        
         renderer.setShading(shadingCheckbox.isSelected());
     }//GEN-LAST:event_shadingCheckboxActionPerformed
 
+    private void ambientSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_ambientSliderStateChanged
+        sliderChanged();
+    }//GEN-LAST:event_ambientSliderStateChanged
+
+    private void diffSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_diffSliderStateChanged
+        // TODO add your handling code here:
+        sliderChanged();
+    }//GEN-LAST:event_diffSliderStateChanged
+
+    private void specSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_specSliderStateChanged
+        // TODO add your handling code here:
+        sliderChanged();
+    }//GEN-LAST:event_specSliderStateChanged
+    
+    private void sliderChanged(){
+        double ambientResult = (double) ambientSlider.getValue() / (double) (ambientSlider.getMaximum() - ambientSlider.getMinimum());
+        double diffResult = (double) diffSlider.getValue() / (double) (diffSlider.getMaximum() - diffSlider.getMinimum());
+        double specResult = (double) specSlider.getValue() / (double) (specSlider.getMaximum() - specSlider.getMinimum());
+        renderer.setAmbient(ambientResult / (ambientResult + diffResult + specResult));
+        renderer.setDiff(diffResult / (ambientResult + diffResult + specResult));
+        renderer.setSpec(specResult / (ambientResult + diffResult + specResult));
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel ambientLabel;
+    private javax.swing.JSlider ambientSlider;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JRadioButton compositingButton;
+    private javax.swing.JLabel diffLabel;
+    private javax.swing.JSlider diffSlider;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JRadioButton mipButton;
     private javax.swing.JLabel renderingSpeedLabel;
     private javax.swing.JCheckBox shadingCheckbox;
     private javax.swing.JRadioButton slicerButton;
+    private javax.swing.JLabel specLabel;
+    private javax.swing.JSlider specSlider;
     private javax.swing.JRadioButton tf2dButton;
     // End of variables declaration//GEN-END:variables
 }

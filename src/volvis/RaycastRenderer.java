@@ -47,9 +47,19 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     /**
      * shading parameters
      */
-    double kAmbient = 0.1;
-    double kDiff = 0.5;
-    double kSpec = 0.4;
+    double ambient = 0.1;
+    double diff = 0.5;
+    double spec = 0.4;
+    public void setAmbient(double a){
+        ambient=a;
+    }
+    public void setDiff(double a){
+        diff=a;
+    }
+    public void setSpec(double a){
+        spec=a;
+    }
+    
     TFColor light = new TFColor(1, 1, 1, 1);
     double alp = 10;
 
@@ -524,15 +534,15 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     double LN = viewVec[0] * gradient.x / tempMag
                             + viewVec[1] * gradient.y / tempMag
                             + viewVec[2] * gradient.z / tempMag;
-                    voxelColor.r = kAmbient * light.r
-                            + widgetColor.r * kDiff * LN
-                            + kSpec * Math.pow(LN, alp);
-                    voxelColor.g = kAmbient * light.g
-                            + widgetColor.g * kDiff * LN
-                            + kSpec * Math.pow(LN, alp);
-                    voxelColor.b = kAmbient * light.b
-                            + widgetColor.b * kDiff * LN
-                            + kSpec * Math.pow(LN, alp);
+                    voxelColor.r = ambient * light.r
+                            + widgetColor.r * diff * LN
+                            + spec * Math.pow(LN, alp);
+                    voxelColor.g = ambient * light.g
+                            + widgetColor.g * diff * LN
+                            + spec * Math.pow(LN, alp);
+                    voxelColor.b = ambient * light.b
+                            + widgetColor.b * diff * LN
+                            + spec * Math.pow(LN, alp);
                 }
 
                 setRGB2Image(voxelColor, i, j, granularity);
@@ -619,6 +629,11 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         }
     }
 
+    /**
+     * @param fv : baseIntensity
+     * @param fxi : getTriVoxel(pixelCoord)
+     * @param r : radius
+     */
     TFColor cal2dColor2(TFColor old, TFColor selected, short fxi, short fv, double r, VoxelGradient gradient, double[] viewVec) {
         double dfxi = gradient.mag;
         TFColor result = new TFColor(0, 0, 0, 1);
@@ -636,9 +651,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             if (dotProducts > 0) {
                 double LN = dotProducts / gradient.mag;
                 double pow = Math.pow(LN, alp);
-                double tr = kAmbient * light.r + selected.r * kDiff * LN + kSpec * pow;
-                double tg = kAmbient * light.g + selected.g * kDiff * LN + kSpec * pow;
-                double tb = kAmbient * light.b + selected.b * kDiff * LN + kSpec * pow;
+                double tr = ambient * light.r + selected.r * diff * LN + spec * pow;
+                double tg = ambient * light.g + selected.g * diff * LN + spec * pow;
+                double tb = ambient * light.b + selected.b * diff * LN + spec * pow;
                 result.r = old.r * (1 - currentAlpha) + currentAlpha * tr;
                 result.g = old.g * (1 - currentAlpha) + currentAlpha * tg;
                 result.b = old.b * (1 - currentAlpha) + currentAlpha * tb;
@@ -739,9 +754,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                                 ) {
                             double power_k_spec = Math.pow(power_k_diff, alp);
 
-                            p_red = (kAmbient * 0.1d + selected.r * kDiff * power_k_diff + kSpec * power_k_spec);
-                            p_green = (kAmbient * 0.1d + selected.g * kDiff * power_k_diff + kSpec * power_k_spec);
-                            p_blue = (kAmbient * 0.1d + selected.b * kDiff * power_k_diff + kSpec * power_k_spec);
+                            p_red = (ambient * 0.1d + selected.r * diff * power_k_diff + spec * power_k_spec);
+                            p_green = (ambient * 0.1d + selected.g * diff * power_k_diff + spec * power_k_spec);
+                            p_blue = (ambient * 0.1d + selected.b * diff * power_k_diff + spec * power_k_spec);
                         }
                     }
 
