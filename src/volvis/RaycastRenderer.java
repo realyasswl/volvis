@@ -13,8 +13,8 @@ import gui.TransferFunctionEditor;
 import java.awt.image.BufferedImage;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+//import org.apache.commons.logging.Log;
+//import org.apache.commons.logging.LogFactory;
 import util.TFChangeListener;
 import util.VectorMath;
 import volume.GradientVolume;
@@ -27,13 +27,29 @@ import volume.VoxelGradient;
  */
 public class RaycastRenderer extends Renderer implements TFChangeListener {
 
-    private static Log logger = LogFactory.getLog(RaycastRenderer.class);
+//    private static Log logger = LogFactory.getLog(RaycastRenderer.class);
     private Volume volume = null;
     private GradientVolume gradients = null;
     RaycastRendererPanel panel;
     TransferFunction tFunc;
     TransferFunctionEditor tfEditor;
     TransferFunction2DEditor tfEditor2D;
+    boolean slicerTri=true;
+    boolean mipTri=true;
+    boolean compositingTri=true;
+    boolean d2Tri=true;
+    public void setSlicerTri(boolean b){
+        slicerTri=b;
+    }
+    public void setMipTri(boolean b){
+        mipTri=b;
+    }
+    public void setCompositingTri(boolean b){
+        compositingTri=b;
+    }
+    public void setD2Tri(boolean b){
+        d2Tri=b;
+    }
 
     final static int INTERACTIVE_MODE_STEP = 4;
     final static int INTERACTIVE_MODE_GRANULARITY = 2;
@@ -48,8 +64,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
      * shading parameters
      */
     double ambient = 0.1;
-    double diff = 0.5;
-    double spec = 0.4;
+    double diff = 0.7;
+    double spec = 0.2;
     public void setAmbient(double a){
         ambient=a;
     }
@@ -72,6 +88,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     public RaycastRenderer() {
         panel = new RaycastRendererPanel(this);
         panel.setSpeedLabel("0");
+        panel.setRateLabel(ambient, diff, spec);
+        panel.setTriCheckbox(slicerTri,mipTri,compositingTri,d2Tri);
     }
 
     public void setVolume(Volume vol) {
@@ -271,8 +289,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                         + volumeCenter[1];
                 pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
                         + volumeCenter[2];
-//                int val = getVoxel(pixelCoord);
-                int val = getTriVoxel(pixelCoord);
+                int val = slicerTri?getTriVoxel(pixelCoord):getVoxel(pixelCoord);
 
                 // Map the intensity to a grey value by linear scaling
                 voxelColor.r = val / max;
@@ -307,6 +324,17 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 }
             }
         }
+    }
+    
+    double[] getPixelCoord(double[] uVec, double[] vVec, double[] viewVec, double[] volumeCenter, int imageCenter, int loop, int i, int j) {
+        double[] pixelCoord = new double[3];
+        pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
+                + volumeCenter[0] + loop * viewVec[0];
+        pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
+                + volumeCenter[1] + loop * viewVec[1];
+        pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
+                + volumeCenter[2] + loop * viewVec[2];
+        return pixelCoord;
     }
 
     void MIP(double[] viewMatrix) {
@@ -343,16 +371,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             for (int i = 0; i < imageSize; i += granularity) {
                 int val = 0;
                 for (int loop = (int) (limit / 2); loop > -limit / 2; loop = loop - step) {
-                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
-                            + volumeCenter[0] + loop * viewVec[0];
-                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
-                            + volumeCenter[1] + loop * viewVec[1];
-                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
-                            + volumeCenter[2] + loop * viewVec[2];
-//                    val = Math.max(val, getVoxel(pixelCoord));
-                    short temp=getTriVoxel(pixelCoord);
-                    val = Math.max(val, temp);
-
+                    pixelCoord=getPixelCoord(uVec,vVec,viewVec,volumeCenter,imageCenter,loop,i,j);
+                    val = Math.max(val, mipTri?getTriVoxel(pixelCoord):getVoxel(pixelCoord));
                 }
 
                 // Map the intensity to a grey value by linear scaling
@@ -412,12 +432,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 voxelColor = new TFColor(0, 0, 0, 1);
                 for (int loop_i = limit / 2; loop_i > -limit / 2; loop_i -= step) {
 //                for (int loop_i = -limit / 2; loop_i < limit / 2; loop_i += step) {
-                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
-                            + volumeCenter[0] + loop_i * viewVec[0];
-                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
-                            + volumeCenter[1] + loop_i * viewVec[1];
-                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
-                            + volumeCenter[2] + loop_i * viewVec[2];
+                    pixelCoord = getPixelCoord(uVec, vVec, viewVec, volumeCenter, imageCenter, loop_i, i, j);
                     /*
                      double transparentRate = 1;
                      double[] pixelCoord_j = new double[3];
@@ -442,7 +457,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                      voxelColor.a += tempColor.a * transparentRate;
                      
                      * */
-                    voxelColor = calColor(tFunc.getColor(getTriVoxel(pixelCoord)), voxelColor);
+                    voxelColor = calColor(tFunc.getColor(compositingTri?getTriVoxel(pixelCoord):getVoxel(pixelCoord)), voxelColor);
 //                    voxelColor = calColor(tFunc.getColor(getVoxel(pixelCoord)), voxelColor);
                 }
 //                voxelColor.a = 1 - voxelColor.a;
@@ -501,13 +516,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 double[] surfaceCoord = new double[3];
                 for (int loop_i = limit / 2; loop_i > -limit / 2; loop_i -= step) {
 //                for (int loop_i = -limit / 2; loop_i < limit / 2; loop_i += step) {
-                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
-                            + volumeCenter[0] + loop_i * viewVec[0];
-                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
-                            + volumeCenter[1] + loop_i * viewVec[1];
-                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
-                            + volumeCenter[2] + loop_i * viewVec[2];
-
+                    pixelCoord=getPixelCoord(uVec,vVec,viewVec,volumeCenter,imageCenter,loop_i,i,j);
                     VoxelGradient gra = getTriGradient(pixelCoord);
                     if (gra.mag > graMax || gra.mag < graMin) {
                         continue;
@@ -610,21 +619,14 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 TFColor voxelColor = new TFColor(0, 0, 0, 1);
                 for (int loop_i = limit / 2; loop_i > -limit / 2; loop_i -= step) {
 //                for (int loop_i = -limit / 2; loop_i < limit / 2; loop_i += step) {
-                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
-                            + volumeCenter[0] + loop_i * viewVec[0];
-                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
-                            + volumeCenter[1] + loop_i * viewVec[1];
-                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
-                            + volumeCenter[2] + loop_i * viewVec[2];
-
-                    VoxelGradient gra = getTriGradient(pixelCoord);
+                    pixelCoord = getPixelCoord(uVec, vVec, viewVec, volumeCenter, imageCenter, loop_i, i, j);
+                    VoxelGradient gra = d2Tri?getTriGradient(pixelCoord):getGradient(pixelCoord);
                     if (gra.mag > graMax || gra.mag < graMin) {
                         continue;
                     }
-                    voxelColor = cal2dColor2(voxelColor, widgetColor, getTriVoxel(pixelCoord), fv, r, gra, viewVec);
+                    voxelColor = cal2dColor2(voxelColor, widgetColor, d2Tri?getTriVoxel(pixelCoord):getVoxel(pixelCoord), fv, r, gra, viewVec);
                 }
 //                voxelColor.a = 1 - voxelColor.a;
-//                    logger.debug(i+","+j+":"+voxelColor);
                 setRGB2Image(voxelColor, i, j, granularity);
             }
         }
